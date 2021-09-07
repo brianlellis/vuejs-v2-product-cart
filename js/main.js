@@ -39,6 +39,9 @@ var app = new Vue({
         selected_price:       79.98,
         selected_variant_key: 'default'
       }
+    },
+    form_errors: {
+      cart_input: {}
     }
   },
   methods: {
@@ -61,6 +64,8 @@ var app = new Vue({
       delete cart.amounts_subtotal[ product_key ][ variant_key ];
       delete cart.items_subtotal[ product_key ][ variant_key ];
       this.cartCalcTotal( cart , [ 'items' , 'amounts' ] );
+
+      if ( 0 === Object.keys( cart.items_subtotal[ product_key ] ).length ) delete cart.items_subtotal[ product_key ];
     },
     cartIncrementAmountsSubtotal: function ( cart , product_key , product ) {
       if ( undefined === cart.amounts_subtotal[ product_key ] )
@@ -110,6 +115,13 @@ var app = new Vue({
         cart[ `${prop}_total` ] = this.mathValueDecimal2( total );
       });
     },
+    cartProductItemsSubtotal: function ( product , passed_variant_key ) {
+      let total = 0;
+      for ( const variant_key in product ) {
+        if ( passed_variant_key !== variant_key ) total += product[ variant_key ];
+      }
+      return total;
+    },
     mathValueDecimal2: function ( value , persist ) {
       return Number( value.toFixed(2) );
     },
@@ -120,19 +132,41 @@ var app = new Vue({
         product.selected_price        = product.price;
       }
     },
+    productStockEval: function ( cart , product_key , product )  {
+      return this.cartProductItemsSubtotal( cart.items_subtotal[ product_key ] ) < product.stock;
+    },
     productVariantInputValue: function ( event , product_key , variant_key , product , cart ) {
-      if ( '' === event.target.value ) return;
+      if ( '' === event.target.value) return;
 
-      const value = Number( event.target.value );
-      if ( value ) {
-        cart.amounts_subtotal[ product_key ][ variant_key ] = this.mathValueDecimal2( value * product.price );
-        cart.items_subtotal[ product_key ][ variant_key ]   = value;
-      } else {
-        delete cart.amounts_subtotal[ product_key ][ variant_key ];
-        delete cart.items_subtotal[ product_key ][ variant_key ];
+      const value         = Number( event.target.value );
+      const present_cart  = this.cartProductItemsSubtotal( cart.items_subtotal[ product_key ] , variant_key );
+      const validate      = this.formValidateProductStock( ( present_cart + value ) , product.stock , product_key );
+
+      if ( validate ) {
+        if (value) {
+          cart.amounts_subtotal[product_key][variant_key] = this.mathValueDecimal2(value * product.price);
+          cart.items_subtotal[product_key][variant_key] = value;
+        } else {
+          delete cart.amounts_subtotal[product_key][variant_key];
+          delete cart.items_subtotal[product_key][variant_key];
+        }
+
+        this.cartCalcTotal(cart, ['items', 'amounts']);
       }
 
-      this.cartCalcTotal( cart , [ 'items' , 'amounts' ] );
+      // this will rerender the component in the client
+      // be wary if your intent is to pull data via a route on reload
+      // different method should be used if that is intent
+      this.$forceUpdate();
+    },
+    formValidateProductStock: function ( value , stock , product_key ) {
+      if ( value > stock ) {
+        this.form_errors.cart_input[product_key] = `Product has a stock limit of ${stock}`;
+        return false;
+      }
+
+      delete this.form_errors.cart_input[product_key];
+      return true;
     }
   }
 })

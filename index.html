@@ -76,7 +76,7 @@
           <div class="col-left">
             <button
               class="btn in-stock"
-              v-if="product.stock"
+              v-if="productStockEval( cart , product_key , product ) && product.stock"
               @click="cartIncrement( cart , product_key , product )"
             >
               Add to Cart
@@ -92,7 +92,7 @@
       <h2> Total Items: {{cart.items_total}}</h2>
       <h2> Subtotal Amount: ${{cart.amounts_total}}</h2>
 
-      <ul>
+      <ul :class="Object.keys( form_errors.cart_input ).length ? 'errors' : null">
         <li v-for="( variants , product_key ) in cart.items_subtotal">
           {{product_key}}
           <br>
@@ -103,8 +103,9 @@
             Remove Product
           </button>
 
-          <ul>
-            <li v-for="( variant , variant_key ) in variants">
+          <ul :class="form_errors.cart_input[product_key] ? 'error' : null">
+            <li
+              v-for="( variant , variant_key ) in variants">
               {{variant_key}} ( {{variant}} )
               | Price: ${{products[ product_key ]['price']}}
               | Subtotal: ${{cart.amounts_subtotal[ product_key ][ variant_key ]}}
@@ -125,9 +126,10 @@
               <!-- This can always be changed to an onclick event -->
               <label>Change Item Amount</label>
               <input
-                @input="productVariantInputValue( $event , product_key , variant_key , products[ product_key ] , cart )"
+                @keyup="productVariantInputValue( $event , product_key , variant_key , products[ product_key ] , cart )"
                 :value="cart.items_subtotal[product_key][variant_key]"
               >
+              <label v-if="form_errors.cart_input[product_key]">{{form_errors.cart_input[product_key]}}</label>
             </li>
           </ul>
         </li>
