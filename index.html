@@ -1,0 +1,142 @@
+<!doctype html>
+<html class="no-js" lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Product App</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/normalize.css">
+
+  <style>
+    #product-wrap {
+      width: 60vw;
+      padding: 1vh 1vw;
+      border: 2px solid #000000;
+      margin: 1vh auto;
+    }
+    .product-image,
+    .product-info {
+      box-sizing: border-box;
+      display: inline-block;
+      width: 49%;
+    }
+    .product-image img {
+      height: 20vh;
+      width: auto;
+    }
+    .btn {
+      border-radius: 0;
+      border: 0;
+      height: 5vh;
+      width: 15vw;
+    }
+    .out-of-stock {
+      background: #d53a3a;
+    }
+    .in-stock {
+      background: #5ed564;
+    }
+    .variants {
+      height: 4vh;
+      width: 9vh;
+      margin: 1vh 1vw 1vh 0;
+      background: #94b6d5;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="app">
+    <div id="product-wrap" v-for="( product , product_key ) in products">
+      <div class="product-image">
+        <img :src="product.image || product.images.default" />
+      </div>
+      <div class="product-info">
+        <h1>{{product_key}} ${{product.price}}</h1>
+        <p>{{product.description}}</p>
+        <ul v-if="product.details">
+          <li v-for="detail in product.details">
+            {{detail}}
+          </li>
+        </ul>
+
+        <div class="product-variants">
+          <button
+            class="btn variants"
+            v-for="( variant , variant_key ) in product.images"
+            @click="productVariantSelect( product, variant, variant_key )"
+          >
+            {{ variant_key }}
+          </button>
+        </div>
+
+        <div class="purchase-and-cart-wrap">
+          <div class="col-left">
+            <button
+              class="btn in-stock"
+              v-if="product.stock"
+              @click="cartIncrement( cart , product_key , product )"
+            >
+              Add to Cart
+            </button>
+            <button class="btn out-of-stock" v-else>Out of Stock</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="cart-wrap" v-if="cart.items_total">
+      <h1>Cart Breakdown</h1>
+      <h2> Total Items: {{cart.items_total}}</h2>
+      <h2> Subtotal Amount: ${{cart.amounts_total}}</h2>
+
+      <ul>
+        <li v-for="( variants , product_key ) in cart.items_subtotal">
+          {{product_key}}
+          <br>
+          <button
+            class="btn"
+            @click="cartRemoveProduct( cart , product_key , products[ product_key ] )"
+          >
+            Remove Product
+          </button>
+
+          <ul>
+            <li v-for="( variant , variant_key ) in variants">
+              {{variant_key}} ( {{variant}} )
+              | Price: ${{products[ product_key ]['price']}}
+              | Subtotal: ${{cart.amounts_subtotal[ product_key ][ variant_key ]}}
+              <br>
+              <button
+                class="btn"
+                @click="cartDecrement( cart , product_key , products[ product_key ] , variant_key )"
+              >
+                Remove 1 Variant Item
+              </button>
+              <button
+                class="btn"
+                @click="cartRemoveProductVariants( cart , product_key , variant_key )"
+              >
+                Remove All Variants Items
+              </button>
+
+              <!-- This can always be changed to an onclick event -->
+              <label>Change Item Amount</label>
+              <input
+                @input="productVariantInputValue( $event , product_key , variant_key , products[ product_key ] , cart )"
+                :value="cart.items_subtotal[product_key][variant_key]"
+              >
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+  <script src="./js/main.js"></script>
+</body>
+
+</html>
