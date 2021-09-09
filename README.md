@@ -3,7 +3,7 @@
 * Modify Cart Information
 * Showcase smart information via stock observation and subtotal calculations
 
-# What this is exhibition doesn't show?
+# What this exhibition doesn't show?
 * Vue Components, this was on purpose to work within applications that haven't utilized components in their work
 * Vuex, this was on purpose as I prefer to keep showcase minimal in features shown in different environments
 * NPM, I prefer to keep environment needs minimal for showcases to avoid dependency conflicts
