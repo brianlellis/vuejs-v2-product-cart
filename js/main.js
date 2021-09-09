@@ -44,6 +44,11 @@ var app = new Vue({
       cart_input: {}
     }
   },
+  computed: {
+    printErrorMsg: function () {
+      return this.form_errors.cart_input[product_key] || '';
+    }
+  },
   methods: {
     cartIncrement: function ( cart , product_key , product ) {
       this.cartIncrementAmountsSubtotal( cart , product_key , product );
